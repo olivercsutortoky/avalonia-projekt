@@ -1,0 +1,71 @@
+using System;
+
+namespace ApartmentBooking.Models
+{
+    public class Apartment
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Address { get; set; }
+        public int PricePerNight { get; set; }   // price for one night in CZK
+        public int Capacity { get; set; }        // how many people fit in
+        // Java uses "boolean", C# uses "bool" - same thing, shorter keyword.
+        public bool IsAvailable { get; set; }
+        public string Description { get; set; }
+
+        public Apartment()
+        {
+            Name = "";
+            Address = "";
+            Description = "";
+            IsAvailable = true;
+        }
+
+        public Apartment(int id, string name, string address, int pricePerNight, int capacity, string description)
+        {
+            Id = id;
+            Name = name;
+            Address = address;
+            PricePerNight = pricePerNight;
+            Capacity = capacity;
+            Description = description;
+            IsAvailable = true;
+        }
+
+        // Address/description could contain '|', which would break our file format,
+        // so we swap it for a safe character before saving.
+        public string ToFileString()
+        {
+            string safeAddress = Address.Replace("|", "/");
+            string safeDescription = Description.Replace("|", "/");
+            return Id + "|" + Name + "|" + safeAddress + "|" + PricePerNight + "|"
+                   + Capacity + "|" + IsAvailable + "|" + safeDescription;
+        }
+
+        public static Apartment FromFileString(string line)
+        {
+            string[] parts = line.Split('|');
+
+            if (parts.Length != 7)
+            {
+                throw new FormatException("Invalid apartment format: " + line);
+            }
+
+            Apartment a = new Apartment();
+            a.Id = int.Parse(parts[0]);
+            a.Name = parts[1];
+            a.Address = parts[2];
+            a.PricePerNight = int.Parse(parts[3]);
+            a.Capacity = int.Parse(parts[4]);
+            // Java: Boolean.parseBoolean(parts[5])
+            a.IsAvailable = bool.Parse(parts[5]);
+            a.Description = parts[6];
+            return a;
+        }
+
+        public override string ToString()
+        {
+            return Name + " - " + Address + " (" + PricePerNight + " Kc/noc)";
+        }
+    }
+}

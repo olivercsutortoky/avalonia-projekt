@@ -1,0 +1,113 @@
+using System;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using ApartmentBooking.Models;
+using ApartmentBooking.Services;
+
+namespace ApartmentBooking.Views
+{
+    public partial class NewReservationWindow : Window
+    {
+        public NewReservationWindow()
+        {
+            InitializeComponent();
+            NaplnComboBoxy();
+        }
+
+        // Naplni oba rozbalovaci seznamy daty z aplikacni logiky.
+        private void NaplnComboBoxy()
+        {
+            // ComboBox zobrazuje text z metody ToString() kazdeho objektu,
+            // takze nemusime resit, co presne se ma vypsat.
+            GuestCombo.ItemsSource = App.Booking.GetAllGuests();
+            ApartmentCombo.ItemsSource = App.Booking.GetAllApartments();
+        }
+
+        // Spocita orientacni cenu, kdyz mame vybrany apartman a obe data.
+        private void PrepocitejCenu()
+        {
+            Apartment apt = ApartmentCombo.SelectedItem as Apartment;
+            DateTime? prijezd = ZiskejDatum(CheckInPicker);
+            DateTime? odjezd = ZiskejDatum(CheckOutPicker);
+
+            // DateTime? znamena "DateTime nebo null" (otaznik = muze chybet).
+            if (apt == null || prijezd == null || odjezd == null)
+            {
+                PriceLabel.Text = "Cena: -";
+                return;
+            }
+
+            int noci = (int)(odjezd.Value.Date - prijezd.Value.Date).TotalDays;
+            if (noci <= 0)
+            {
+                PriceLabel.Text = "Cena: -";
+                return;
+            }
+
+            int cena = noci * apt.PricePerNight;
+            PriceLabel.Text = "Cena: " + cena + " Kc (" + noci + " noci)";
+        }
+
+        // DatePicker vraci typ DateTimeOffset?, my chceme obycejny DateTime.
+        private DateTime? ZiskejDatum(DatePicker picker)
+        {
+            if (picker.SelectedDate == null)
+                return null;
+            return picker.SelectedDate.Value.DateTime;
+        }
+
+        // Zmena vyberu v ComboBoxu - prepocitame cenu.
+        private void OnVyberZmenen(object sender, SelectionChangedEventArgs e)
+        {
+            PrepocitejCenu();
+        }
+
+        // Zmena data v DatePickeru - tady ma udalost jiny typ argumentu nez tlacitko.
+        private void OnDatumZmeneno(object sender, DatePickerSelectedValueChangedEventArgs e)
+        {
+            PrepocitejCenu();
+        }
+
+        private void OnUlozitClick(object sender, RoutedEventArgs e)
+        {
+            Guest host = GuestCombo.SelectedItem as Guest;
+            Apartment apt = ApartmentCombo.SelectedItem as Apartment;
+            DateTime? prijezd = ZiskejDatum(CheckInPicker);
+            DateTime? odjezd = ZiskejDatum(CheckOutPicker);
+
+            if (host == null)
+            {
+                ErrorLabel.Text = "Vyberte hosta.";
+                return;
+            }
+            if (apt == null)
+            {
+                ErrorLabel.Text = "Vyberte apartman.";
+                return;
+            }
+            if (prijezd == null || odjezd == null)
+            {
+                ErrorLabel.Text = "Vyberte datum prijezdu a odjezdu.";
+                return;
+            }
+
+            // Vsechna kontrola spravnosti je uvnitr aplikacni logiky.
+            ValidationResult vysledek = App.Booking.CreateReservation(
+                host.Id, apt.Id, prijezd.Value, odjezd.Value, NotesBox.Text);
+
+            if (!vysledek.IsValid)
+            {
+                ErrorLabel.Text = vysledek.ErrorMessage;
+                return;
+            }
+
+            // Vse v poradku - zavreme okno.
+            Close();
+        }
+
+        private void OnZrusitClick(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+    }
+}

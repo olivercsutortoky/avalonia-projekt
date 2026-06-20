@@ -1,85 +1,75 @@
-[README.md](https://github.com/user-attachments/files/28722229/README.md)
-# Rezervační systém apartmánů
+using System;
 
-aplikace pro správu rezervací apartmánů. Umožňuje evidovat apartmány a hosty,
-vytvářet rezervace, hlídat kolize termínů a počítat cenu za pobyt. Data se ukládají
-do textových souborů ve složce AppData.
+namespace ApartmentBooking.Models
+{
+    // In Java this would be a normal class with private fields plus getX()/setX()
+    // methods. C# replaces those with "properties" written as { get; set; }.
+    public class Guest
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
 
+        public Guest()
+        {
+            // In Java a String field defaults to null. We set empty strings here
+            // to avoid null problems later.
+            FirstName = "";
+            LastName = "";
+            Email = "";
+            Phone = "";
+        }
 
-## Funkce
+        public Guest(int id, string firstName, string lastName, string email, string phone)
+        {
+            Id = id;
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            Phone = phone;
+        }
 
-- Správa apartmánů (přidání, smazání, seznam) – název, adresa, cena za noc, kapacita, popis
-- Správa hostů (přidání, smazání, seznam) – jméno, příjmení, e-mail, telefon
-- Vytváření rezervací s výběrem hosta, apartmánu a termínu
-- Automatická kontrola kolize termínů – jeden apartmán nelze rezervovat dvakrát na stejné dny
-- Automatický výpočet ceny (počet nocí × cena za noc)
-- Potvrzení a zrušení rezervace
-- Validace všech vstupů (prázdná pole, formát e-mailu, formát čísla, rozsahy, data)
-- Ukládání dat do souborů `.txt` ve složce AppData
+        // Turns the object into one line of text for the .txt file.
+        public string ToFileString()
+        {
+            return Id + "|" + FirstName + "|" + LastName + "|" + Email + "|" + Phone;
+        }
 
+        // Builds a Guest back from one line of text.
+        // Java: line.split("\\|")  -> needs a regex string
+        // C#:   line.Split('|')    -> can take a single character
+        public static Guest FromFileString(string line)
+        {
+            string[] parts = line.Split('|');
 
-## Spuštění
+            if (parts.Length != 5)
+            {
+                // Java would usually throw IllegalArgumentException here.
+                throw new FormatException("Invalid guest format: " + line);
+            }
 
-V kořenové složce projektu spusťte:
+            Guest g = new Guest();
+            // Java: Integer.parseInt(parts[0])
+            g.Id = int.Parse(parts[0]);
+            g.FirstName = parts[1];
+            g.LastName = parts[2];
+            g.Email = parts[3];
+            g.Phone = parts[4];
+            return g;
+        }
 
-```
-dotnet run
-```
+        // A read-only property. In Java this would be a getFullName() method.
+        public string FullName
+        {
+            get { return FirstName + " " + LastName; }
+        }
 
-Potřebujete nainstalované **.NET SDK 8** nebo novější.
-
-## Kde se ukládají data
-
-Aplikace si při prvním spuštění vytvoří složku:
-
-C:\Users\<jméno>\AppData\Roaming\ApartmentBooking\`
-
-Uvnitř vzniknou soubory `guests.txt`, `apartments.txt`, `reservations.txt`
-a případně `error.log`.
-
-## Struktura projektu
-
-```
-ApartmentBooking/
-├── Program.cs              vstupní bod aplikace
-├── App.axaml(.cs)          spuštění aplikace + sdílená logika
-├── Models/                 datové třídy (objekty)
-│   ├── Guest.cs
-│   ├── Apartment.cs
-│   └── Reservation.cs
-├── Services/               aplikační logika (oddělená od GUI)
-│   ├── ValidationService.cs
-│   ├── FileService.cs
-│   └── BookingService.cs
-└── Views/                  okna (GUI)
-    ├── MainWindow.axaml(.cs)
-    ├── NewReservationWindow.axaml(.cs)
-    ├── ApartmentsWindow.axaml(.cs)
-    └── GuestsWindow.axaml(.cs)
-```
-
-GUI nikdy nepracuje se soubory přímo a nevaliduje samo – veškerou logiku volá přes
-třídu `BookingService`. To zajišťuje oddělení aplikační logiky od zobrazení.
-
-## Formát dat
-
-Každý záznam je jeden řádek, hodnoty oddělené znakem `|`. Řádky začínající `#`
-jsou komentáře (hlavička souboru). Příklad `apartments.txt`:
-
-```
-# ApartmentBooking - Apartments
-# Format: Id|Name|Address|PricePerNight|Capacity|IsAvailable|Description
-1|Apartman Vltava|Praha 1, Kaprova 12|1800|2|True|Utulny apartman v centru.
-```
-
-## Rozdělení práce
-
-- **Sasa* – datové třídy (Models) a aplikační/datová vrstva (Services):
-  ukládání do souborů, AppData, validace, hlavní logika rezervací.
-- **Olik ** – GUI: hlavní okno s přehledem rezervací a okno pro vytvoření rezervace.
-- **Jakub ** – GUI: okno pro správu apartmánů a okno pro správu hostů.
-
-## Poznámka k použití AI
-
-U psaní projektu byla využita umělá inteligence jako pomocník
-(například při psaní opakujícího se kódu, kontrole a hledání chyb). 
+        // Java: @Override public String toString()
+        public override string ToString()
+        {
+            return FullName + " (" + Email + ")";
+        }
+    }
+}

@@ -1,0 +1,128 @@
+using System.Collections.Generic;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using ApartmentBooking.Models;
+using ApartmentBooking.Services;
+
+namespace ApartmentBooking.Views
+{
+    // Pomocna trida jen pro zobrazeni v seznamu - drzi rezervaci a hotovy text.
+    // ListBox totiz zobrazuje to, co vrati metoda ToString().
+    public class ReservationRow
+    {
+        public Reservation Res { get; set; }
+        public string Display { get; set; }
+
+        public override string ToString()
+        {
+            return Display;
+        }
+    }
+
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            // InitializeComponent nacte XAML a propoji ho s timto kodem (pres x:Class).
+            // Tuto metodu si Avalonia generuje sama, my ji jen zavolame.
+            InitializeComponent();
+            RefreshList();
+        }
+
+        // Naplni ListBox aktualnimi rezervacemi z aplikacni logiky.
+        private void RefreshList()
+        {
+            List<ReservationRow> radky = new List<ReservationRow>();
+
+            foreach (Reservation r in App.Booking.GetAllReservations())
+            {
+                // K rezervaci si dohledame jmeno hosta a nazev apartmanu.
+                Guest host = App.Booking.GetGuestById(r.GuestId);
+                Apartment apt = App.Booking.GetApartmentById(r.ApartmentId);
+
+                string jmenoHosta = (host == null) ? "?" : host.FullName;
+                string nazevApt = (apt == null) ? "?" : apt.Name;
+
+                string text = "#" + r.Id + "   " + nazevApt + "   |   " + jmenoHosta
+                              + "   |   " + r.CheckIn.ToString("dd.MM.yyyy") + " - " + r.CheckOut.ToString("dd.MM.yyyy")
+                              + "   |   " + r.TotalPrice + " Kc   |   " + StavText(r.Status);
+
+                ReservationRow radek = new ReservationRow();
+                radek.Res = r;
+                radek.Display = text;
+                radky.Add(radek);
+            }
+
+            // ItemsSource je vlastnost ListBoxu, do ktere se dava seznam polozek.
+            ReservationsList.ItemsSource = radky;
+            StatusLabel.Text = "Pocet rezervaci: " + radky.Count;
+        }
+
+        // Prelozi stav rezervace na cesky text.
+        private string StavText(ReservationStatus stav)
+        {
+            if (stav == ReservationStatus.Confirmed) return "Potvrzeno";
+            if (stav == ReservationStatus.Cancelled) return "Zruseno";
+            return "Ceka";
+        }
+
+        // V Avalonii ma obsluha kliknuti vzdy tyto dva parametry
+        // (object sender, RoutedEventArgs e). V XAML se napoji pres Click="...".
+        private void OnNewReservationClick(object sender, RoutedEventArgs e)
+        {
+            NewReservationWindow okno = new NewReservationWindow();
+            // Az se okno zavre, obnovime seznam (mohla pribyt nova rezervace).
+            okno.Closed += (s, args) => RefreshList();
+            // ShowDialog otevre okno "modalne" - nad hlavnim oknem.
+            okno.ShowDialog(this);
+        }
+
+        private void OnApartmentsClick(object sender, RoutedEventArgs e)
+        {
+            ApartmentsWindow okno = new ApartmentsWindow();
+            okno.Closed += (s, args) => RefreshList();
+            okno.ShowDialog(this);
+        }
+
+        private void OnGuestsClick(object sender, RoutedEventArgs e)
+        {
+            GuestsWindow okno = new GuestsWindow();
+            okno.Closed += (s, args) => RefreshList();
+            okno.ShowDialog(this);
+        }
+
+        private void OnConfirmClick(object sender, RoutedEventArgs e)
+        {
+            // SelectedItem vrati vybranou polozku, nebo null kdyz nic neni vybrano.
+            // "as ReservationRow" se pokusi pretypovat - kdyz to nejde, vrati null.
+            ReservationRow vybrany = ReservationsList.SelectedItem as ReservationRow;
+            if (vybrany == null)
+            {
+                StatusLabel.Text = "Nejdrive vyberte rezervaci v seznamu.";
+                return;
+            }
+
+            ValidationResult vysledek = App.Booking.ConfirmReservation(vybrany.Res.Id);
+            if (!vysledek.IsValid)
+                StatusLabel.Text = vysledek.ErrorMessage;
+            else
+                RefreshList();
+        }
+
+        private void OnCancelClick(object sender, RoutedEventArgs e)
+        {
+            ReservationRow vybrany = ReservationsList.SelectedItem as ReservationRow;
+            if (vybrany == null)
+            {
+                StatusLabel.Text = "Nejdrive vyberte rezervaci v seznamu.";
+                return;
+            }
+
+            ValidationResult vysledek = App.Booking.CancelReservation(vybrany.Res.Id);
+            if (!vysledek.IsValid)
+                StatusLabel.Text = vysledek.ErrorMessage;
+            else
+                RefreshList();
+        }
+    }
+}

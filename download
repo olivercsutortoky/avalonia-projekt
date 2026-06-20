@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ApartmentBooking.Views.MainWindow"
+        Width="850" Height="600"
+        WindowStartupLocation="CenterScreen"
+        Title="Rezervacni system apartmanu">
+
+	<!-- Grid rozdeli okno na radky. "Auto" = vyska podle obsahu, "*" = zbytek mista. -->
+	<Grid RowDefinitions="Auto,Auto,*,Auto" Margin="15">
+
+		<TextBlock Grid.Row="0"
+		           Text="Rezervacni system apartmanu"
+		           FontSize="22" FontWeight="Bold"/>
+
+		<!-- StackPanel s Orientation="Horizontal" nasklada tlacitka vedle sebe. -->
+		<StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+			<Button Content="Nova rezervace" Click="OnNewReservationClick"/>
+			<Button Content="Sprava apartmanu" Click="OnApartmentsClick"/>
+			<Button Content="Sprava hostu" Click="OnGuestsClick"/>
+		</StackPanel>
+
+		<!-- ListBox zobrazuje seznam. Polozky do nej nasypeme z kodu (ItemsSource). -->
+		<ListBox Grid.Row="2" x:Name="ReservationsList" Margin="0,15,0,15"/>
+
+		<StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
+			<Button Content="Potvrdit rezervaci" Click="OnConfirmClick"/>
+			<Button Content="Zrusit rezervaci" Click="OnCancelClick"/>
+			<TextBlock x:Name="StatusLabel" VerticalAlignment="Center" Text=""/>
+		</StackPanel>
+	</Grid>
+</Window>

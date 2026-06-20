@@ -1,0 +1,50 @@
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using ApartmentBooking.Services;
+using ApartmentBooking.Views;
+
+namespace ApartmentBooking
+{
+    public partial class App : Application
+    {
+        // Jedna sdílená instance aplikační logiky pro celou aplikaci.
+        // Všechna okna k ní přistupují přes App.Booking.
+        public static BookingService Booking { get; private set; }
+
+        public override void Initialize()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
+        public override void OnFrameworkInitializationCompleted()
+        {
+            // Vytvoříme aplikační logiku a předáme jí službu pro práci se soubory.
+            Booking = new BookingService(new FileService());
+            SeedDemoDataIfEmpty();
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                desktop.MainWindow = new MainWindow();
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
+
+        // Při úplně prvním spuštění (prázdné soubory) přidáme pár ukázkových
+        // záznamů, aby aplikace nebyla úplně prázdná.
+        private void SeedDemoDataIfEmpty()
+        {
+            if (Booking.GetAllApartments().Count == 0)
+            {
+                Booking.AddApartment("Apartman Vltava", "Praha 1, Kaprova 12", "1800", "2", "Utulny apartman v centru.");
+                Booking.AddApartment("Apartman Petrin", "Praha 5, Plzenska 8", "2400", "4", "Velky apartman s vyhledem.");
+            }
+
+            if (Booking.GetAllGuests().Count == 0)
+            {
+                Booking.AddGuest("Jan", "Novak", "jan.novak@email.cz", "+420777123456");
+            }
+        }
+    }
+}

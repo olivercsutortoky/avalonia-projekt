@@ -1,0 +1,39 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ApartmentBooking.Views.GuestsWindow"
+        Width="720" Height="480"
+        WindowStartupLocation="CenterOwner"
+        Title="Sprava hostu">
+
+	<!-- Stejne rozlozeni jako u apartmanu: vlevo seznam, vpravo formular. -->
+	<Grid ColumnDefinitions="*,300" Margin="15">
+
+		<!-- LEVA STRANA: seznam hostu -->
+		<Grid Grid.Column="0" RowDefinitions="Auto,*,Auto" Margin="0,0,15,0">
+			<TextBlock Grid.Row="0" Text="Hoste" FontSize="18" FontWeight="Bold"/>
+			<ListBox Grid.Row="1" x:Name="GuestsList" Margin="0,10,0,10"/>
+			<Button Grid.Row="2" Content="Smazat vybraneho" Click="OnDeleteClick"/>
+		</Grid>
+
+		<!-- PRAVA STRANA: formular pro pridani -->
+		<StackPanel Grid.Column="1" Spacing="6">
+			<TextBlock Text="Novy host" FontSize="18" FontWeight="Bold"/>
+
+			<TextBlock Text="Jmeno:"/>
+			<TextBox x:Name="FirstNameBox"/>
+
+			<TextBlock Text="Prijmeni:"/>
+			<TextBox x:Name="LastNameBox"/>
+
+			<TextBlock Text="E-mail:"/>
+			<TextBox x:Name="EmailBox"/>
+
+			<TextBlock Text="Telefon (nepovinne):"/>
+			<TextBox x:Name="PhoneBox"/>
+
+			<Button Content="Pridat hosta" Click="OnAddClick"/>
+			<TextBlock x:Name="InfoLabel" Foreground="DarkRed" TextWrapping="Wrap"/>
+			<Button Content="Zavrit" Click="OnCloseClick"/>
+		</StackPanel>
+	</Grid>
+</Window>
